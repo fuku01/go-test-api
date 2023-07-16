@@ -12,7 +12,8 @@ import (
 )
 
 func main() {
-	e := echo.New() // Rest APIを使用するためのインスタンスを作成
+	e := echo.New()          // Rest APIを使用するためのインスタンスを作成
+	e.Use(middleware.CORS()) // CORSを許可する
 
 	// DBのURLを取得
 	DBURL, err := config.GetDBURL()
@@ -24,15 +25,17 @@ func main() {
 	if err != nil {
 		panic(err) // !エラーがあればプログラムを強制終了
 	}
+	tr := mysgl.NewTodoRepository(db) // 「TodoRepository」を作成
+	tu := usecase.NewTodoUsecase(tr)  // 「TodoUsecase」を作成
+	th := handler.NewTodoHandler(tu)  // 「TodoHandler」を作成
+	e.GET("/todos", th.GetAll)        // GETメソッドで/todosにアクセスしたときの処理を定義
+	e.POST("/create", th.Create)      // POSTメソッドで/createにアクセスしたときの処理を定義
+	e.DELETE("/delete/:ID", th.Delete)
 
-	e.Use(middleware.CORS())                     // CORSを許可する
-	e.GET("/hello", func(c echo.Context) error { // ?GETメソッドで/helloにアクセスしたときの処理を定義
-		return c.String(200, "Hello World") // ?200ステータスコードと"Hello World"を返す
-	})
-	tr := mysgl.NewTodoRepository(db)
-	tu := usecase.NewTodoUsecase(tr)
-	th := handler.NewTodoHandler(tu)
-	e.GET("/todos", th.GetAll) // GETメソッドで/todosにアクセスしたときの処理を定義
-
+	// サーバーを起動
 	e.Logger.Fatal(e.Start(":8000")) // サーバーを起動
+
+	//// e.GET("/hello", func(c echo.Context) error { // GETメソッドで/helloにアクセスしたときの処理を定義
+	//// 	return c.String(200, "Hello World") // 200ステータスコードと"Hello World"を返す
+	//// })
 }
