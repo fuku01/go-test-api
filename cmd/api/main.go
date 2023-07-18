@@ -1,6 +1,9 @@
 package main // mainパッケージであることを宣言
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/fuku01/go-test-api/app/config"
 	"github.com/fuku01/go-test-api/app/handler"
 	"github.com/fuku01/go-test-api/app/infra/mysgl"
@@ -14,6 +17,26 @@ import (
 func main() {
 	e := echo.New()          // Rest APIを使用するためのインスタンスを作成
 	e.Use(middleware.CORS()) // CORSを許可する
+
+	ctx := context.Background()
+	// Firebaseの認証情報を取得
+	firebaseApp, err := config.GetFirebaseAuth()
+	if err != nil {
+		panic(err) // !エラーがあればプログラムを強制終了
+	}
+	client, err := firebaseApp.Auth(ctx)
+	if err != nil {
+		panic(err) // !エラーがあればプログラムを強制終了
+	}
+
+	user, err := client.GetUser(ctx, "n5ZIMkjXrNVhuYNvPYJIqpOKJwR2")
+	if err != nil {
+		panic(err) // !エラーがあればプログラムを強制終了
+	}
+
+	fmt.Println("=============================")
+	fmt.Println(user.Email)
+	fmt.Println("=============================")
 
 	// DBのURLを取得
 	DBURL, err := config.GetDBURL()
@@ -33,7 +56,7 @@ func main() {
 	e.DELETE("/delete/:ID", th.Delete) // DELETEメソッドで/deleteにアクセスしたときの処理を定義
 
 	// サーバーを起動
-	e.Logger.Fatal(e.Start(":8000")) // サーバーを起動
+	e.Logger.Fatal(e.Start(":8000"))
 
 	//// e.GET("/hello", func(c echo.Context) error { // GETメソッドで/helloにアクセスしたときの処理を定義
 	//// 	return c.String(200, "Hello World") // 200ステータスコードと"Hello World"を返す
