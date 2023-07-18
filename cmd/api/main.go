@@ -2,7 +2,6 @@ package main // mainパッケージであることを宣言
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/fuku01/go-test-api/app/config"
 	"github.com/fuku01/go-test-api/app/handler"
@@ -29,14 +28,14 @@ func main() {
 		panic(err) // !エラーがあればプログラムを強制終了
 	}
 
-	user, err := client.GetUser(ctx, "n5ZIMkjXrNVhuYNvPYJIqpOKJwR2")
-	if err != nil {
-		panic(err) // !エラーがあればプログラムを強制終了
-	}
+	// user, err := client.GetUser(ctx, "n5ZIMkjXrNVhuYNvPYJIqpOKJwR2")
+	// if err != nil {
+	// 	panic(err) // エラーがあればプログラムを強制終了
+	// }
 
-	fmt.Println("=============================")
-	fmt.Println(user.Email)
-	fmt.Println("=============================")
+	// fmt.Println("=============================")
+	// fmt.Println(user.Email)
+	// fmt.Println("=============================")
 
 	// DBのURLを取得
 	DBURL, err := config.GetDBURL()
@@ -48,12 +47,12 @@ func main() {
 	if err != nil {
 		panic(err) // !エラーがあればプログラムを強制終了
 	}
-	tr := mysgl.NewTodoRepository(db)  // 「TodoRepository」を作成
-	tu := usecase.NewTodoUsecase(tr)   // 「TodoUsecase」を作成
-	th := handler.NewTodoHandler(tu)   // 「TodoHandler」を作成
-	e.GET("/todos", th.GetAll)         // GETメソッドで/todosにアクセスしたときの処理を定義
-	e.POST("/create", th.Create)       // POSTメソッドで/createにアクセスしたときの処理を定義
-	e.DELETE("/delete/:ID", th.Delete) // DELETEメソッドで/deleteにアクセスしたときの処理を定義
+	tr := mysgl.NewTodoRepository(db)        // 「TodoRepository」を作成
+	tu := usecase.NewTodoUsecase(tr, client) // 「TodoUsecase」を作成
+	th := handler.NewTodoHandler(tu)         // 「TodoHandler」を作成
+	e.GET("/todos", th.GetAll)               // GETメソッドで/todosにアクセスしたときの処理を定義
+	e.POST("/create", th.Create)             // POSTメソッドで/createにアクセスしたときの処理を定義
+	e.DELETE("/delete/:ID", th.Delete)       // DELETEメソッドで/deleteにアクセスしたときの処理を定義
 
 	// サーバーを起動
 	e.Logger.Fatal(e.Start(":8000"))
