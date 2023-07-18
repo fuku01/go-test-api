@@ -25,12 +25,12 @@ func main() {
 	if err != nil {
 		panic(err) // !エラーがあればプログラムを強制終了
 	}
-	tr := mysgl.NewTodoRepository(db) // 「TodoRepository」を作成
-	tu := usecase.NewTodoUsecase(tr)  // 「TodoUsecase」を作成
-	th := handler.NewTodoHandler(tu)  // 「TodoHandler」を作成
-	e.GET("/todos", th.GetAll)        // GETメソッドで/todosにアクセスしたときの処理を定義
-	e.POST("/create", th.Create)      // POSTメソッドで/createにアクセスしたときの処理を定義
-	e.DELETE("/delete/:ID", th.Delete)
+	tr := mysgl.NewTodoRepository(db)  // 「TodoRepository」を作成
+	tu := usecase.NewTodoUsecase(tr)   // 「TodoUsecase」を作成
+	th := handler.NewTodoHandler(tu)   // 「TodoHandler」を作成
+	e.GET("/todos", th.GetAll)         // GETメソッドで/todosにアクセスしたときの処理を定義
+	e.POST("/create", th.Create)       // POSTメソッドで/createにアクセスしたときの処理を定義
+	e.DELETE("/delete/:ID", th.Delete) // DELETEメソッドで/deleteにアクセスしたときの処理を定義
 
 	// サーバーを起動
 	e.Logger.Fatal(e.Start(":8000")) // サーバーを起動

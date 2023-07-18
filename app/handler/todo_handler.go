@@ -10,16 +10,16 @@ import (
 )
 
 type TodoHandler interface {
-	GetAll(c echo.Context) error
-	Create(c echo.Context) error
-	Delete(c echo.Context) error
+	GetAll(c echo.Context) error // GetAllメソッドを定義
+	Create(c echo.Context) error // Createメソッドを定義
+	Delete(c echo.Context) error // Deleteメソッドを定義
 }
 
 type todoHandler struct {
 	todoUsecase usecase.TodoUsecase
 }
 
-func NewTodoHandler(todoUsecase usecase.TodoUsecase) todoHandler {
+func NewTodoHandler(todoUsecase usecase.TodoUsecase) TodoHandler {
 	return todoHandler{todoUsecase: todoUsecase}
 }
 
