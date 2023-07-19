@@ -1,44 +1,25 @@
 package usecase
 
 import (
-	"context"
-
-	firebase "firebase.google.com/go/auth"
 	"github.com/fuku01/go-test-api/app/domain/model"
 	"github.com/fuku01/go-test-api/app/domain/repository"
 )
 
-// 1. TodoUsecaseインターフェースを定義
-// 2. TodoUsecaseインターフェースを実装する構造体は、この3つのメソッドを実装しなければならない
-
+// ! 1.このファイルで使用する「TodoUsecaseインターフェース（メソッドの集まり）」を定義する。
 type TodoUsecase interface {
-	GetAll(userID uint) ([]*model.Todo, error)               // GetAllメソッドを定義
-	Create(content string, userID uint) (*model.Todo, error) // Createメソッドを定義
-	Delete(ID uint, userID uint) error                       // Deleteメソッドを定義
-	GetUserByToken(ctx context.Context, token string) (*model.User, error)
+	GetAll(userID uint) ([]*model.Todo, error)
+	Create(content string, userID uint) (*model.Todo, error)
+	Delete(ID uint, userID uint) error
 }
 
+// ! 2.「handler層」の「todo_handler.go」で使用する「TodoUsecaseストラクト（構造体）」を定義する。
 type todoUsecase struct {
 	todoRepository repository.TodoRepository
-	authClient     *firebase.Client
 }
 
-func NewTodoUsecase(todoRepository repository.TodoRepository, authClient *firebase.Client) TodoUsecase {
-	return todoUsecase{todoRepository: todoRepository, authClient: authClient}
-}
-
-// GetUserByTokenを定義
-func (u todoUsecase) GetUserByToken(ctx context.Context, token string) (*model.User, error) {
-	firebaseUser, err := u.authClient.VerifyIDToken(ctx, token)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := u.todoRepository.GetUserByFirebaseUID(firebaseUser.UID)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+// ! 3.「handler層」でこのファイルのメソッドを使用するために、「NewTodoUsecaseメソッド」を定義する。
+func NewTodoUsecase(todoRepository repository.TodoRepository) TodoUsecase {
+	return &todoUsecase{todoRepository: todoRepository}
 }
 
 // GetAllメソッドを定義

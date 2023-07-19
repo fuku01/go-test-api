@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-// * maigration実行処理で使用する「DBのURL」を取得する関数
+// !maigration実行処理で使用する「DBのURL」を取得する関数
 func GetDBURL() (string, error) {
 	DBName := os.Getenv("MYSQL_DATABASE")
 	if DBName == "" {
@@ -37,7 +37,7 @@ func GetDBURL() (string, error) {
 	return DBURL, nil // DBのURLを返す
 }
 
-// * firebaseの認証情報を取得する関数
+// !firebaseの認証情報を取得する関数
 func GetFirebaseAuth() (*firebase.App, error) {
 	opt := option.WithCredentialsFile("./service_account.json")
 	app, err := firebase.NewApp(context.Background(), nil, opt)

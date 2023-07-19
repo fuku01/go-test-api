@@ -6,57 +6,47 @@ import (
 	"gorm.io/gorm"
 )
 
-type TodoRepository struct {
-	db *gorm.DB
+type todoRepository struct {
+	db *gorm.DB // DB接続に必要な情報を格納する。
 }
 
-// NewTodoRepositoryメソッドを定義
-// 1. DBを引数に取り、TodoRepository構造体を返す
-// 2. TodoRepository構造体のフィールドに引数で受け取ったDBを代入
-// 3. TodoRepository構造体を返す
-// 4. この関数を呼び出すと、DBを引数に取り、TodoRepository構造体を返す関数が作成される
-
-func NewTodoRepository(db *gorm.DB) repository.TodoRepository {
-	return &TodoRepository{db: db}
+// ! 「usecase層」でこのファイルのメソッドを使用するために、「NewTodoRepositoryメソッド」を定義する。
+// ?　1.引数：db *gorm.DB　= DB接続に必要な情報を格納する。
+// ?　2.戻り値の型：repository.TodoRepository　= 「repository/todo_repository.go」で定義したTodoRepositoryインターフェース。
+// ?　3.戻り値：&TodoRepository{db: db}　= TodoRepository構造体（type TodoRepositoryで定義）のポインタを返す。
+func NewTodoRepository(database *gorm.DB) repository.TodoRepository {
+	return &todoRepository{db: database}
 }
 
-// firebaseUIDからuserIDを取得するメソッドを定義
-func (r TodoRepository) GetUserByFirebaseUID(firebaseUID string) (*model.User, error) {
-	var user model.User
-	err := r.db.Where("firebase_uid = ?", firebaseUID).First(&user).Error // DBからfirebase_uidが一致するレコードを取得。エラーがあればerrに代入。
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
+// ! 「domain層」の「repository/todo_repository.go」で定義した「TodoRepositoryインターフェース」のメソッドを実装する。
 
 // GetAllメソッドを定義
-func (r TodoRepository) GetAll(userID uint) ([]*model.Todo, error) { //user_idを引数に追加
-	var todos []*model.Todo
+func (r todoRepository) GetAll(userID uint) ([]*model.Todo, error) { //user_idを引数に追加。
+	var todos []*model.Todo                                     // .Todo構造体の配列を作成
 	err := r.db.Where("user_id = ?", userID).Find(&todos).Error // DBからuser_idが一致するレコードを全て取得。エラーがあればerrに代入。
 	if err != nil {
 		return nil, err
 	}
-	return todos, nil
+	return todos, nil // エラーがなければtodosを返す
 }
 
 // Createメソッドを定義
-func (r TodoRepository) Create(content string, userID uint) (*model.Todo, error) {
-	newTodo := &model.Todo{Content: content, UserID: userID} //contentとuser_idを引数にTodo構造体を作成
+func (r todoRepository) Create(content string, userID uint) (*model.Todo, error) {
+	newTodo := &model.Todo{Content: content, UserID: userID} // contentとuser_idを引数にTodo構造体を作成
 	err := r.db.Create(newTodo).Error                        // DBに保存。エラーがあればerrに代入。
-	if err != nil {                                          // エラーがあれば
-		return nil, err // エラーを返す
+	if err != nil {
+		return nil, err
 	}
 	return newTodo, nil // エラーがなければnewTodoを返す
 }
 
 // Deleteメソッドを定義
-func (r TodoRepository) Delete(ID uint, userID uint) error {
+func (r todoRepository) Delete(ID uint, userID uint) error {
 	todo := &model.Todo{}                             // まず、空のTodo構造体を作成
 	r.db.Where("user_id = ?", userID).First(todo, ID) // 次に、DBからuser_idが一致するレコードを取得
-	err := r.db.Unscoped().Delete(todo).Error         // 最後に、取得したレコードを削除
+	err := r.db.Unscoped().Delete(todo).Error         // 最後に、取得したレコードを削除。エラーがあればerrに代入。
 	if err != nil {
-		return err // エラーがあればエラーを返す
+		return err
 	}
 	return nil // エラーがなければnilを返す
 }

@@ -23,19 +23,19 @@ type TodoHandler interface {
 
 type todoHandler struct {
 	todoUsecase usecase.TodoUsecase
+	userUsecase usecase.UserUsecase
 }
 
-func NewTodoHandler(todoUsecase usecase.TodoUsecase) TodoHandler {
-	return todoHandler{todoUsecase: todoUsecase}
+func NewTodoHandler(todoUsecase usecase.TodoUsecase, userUsecase usecase.UserUsecase) TodoHandler {
+	return &todoHandler{todoUsecase: todoUsecase, userUsecase: userUsecase}
 }
 
 // GetAllメソッドを定義
 func (h todoHandler) GetAll(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
-	fmt.Println("トークン：", token)
 
-	user, err := h.todoUsecase.GetUserByToken(context.Background(), token)
+	user, err := h.userUsecase.GetUserByToken(context.Background(), token)
 	if err != nil {
 		fmt.Println("エラー：", err)
 		return err
@@ -53,9 +53,8 @@ func (h todoHandler) GetAll(c echo.Context) error {
 func (h todoHandler) Create(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
-	fmt.Println("トークン：", token)
 
-	user, err := h.todoUsecase.GetUserByToken(context.Background(), token)
+	user, err := h.userUsecase.GetUserByToken(context.Background(), token)
 	if err != nil {
 		return err
 	}
@@ -77,9 +76,8 @@ func (h todoHandler) Create(c echo.Context) error {
 func (h todoHandler) Delete(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
-	fmt.Println("トークン：", token)
 
-	user, err := h.todoUsecase.GetUserByToken(context.Background(), token)
+	user, err := h.userUsecase.GetUserByToken(context.Background(), token)
 	if err != nil {
 		return err
 	}
