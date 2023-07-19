@@ -1,18 +1,14 @@
-package model // modelパッケージであることを宣言
+package model
 
-import "gorm.io/gorm" // gormを使用するためのパッケージ
+import "gorm.io/gorm"
+
+// !このファイルでは、「DBのテーブル」と紐付けるための型を定義する。
+
+// （※ gorm.Modelを埋め込むと、ID, CreatedAt, UpdatedAt, DeletedAtが自動で追加される。）
 
 // 「Todo」の型を定義
 type Todo struct {
-	gorm.Model        // gorm.Modelを埋め込むと、ID, CreatedAt, UpdatedAt, DeletedAtが自動で追加される
-	Content    string `json:"content"` // jsonのcontentと紐付け
+	gorm.Model        // gorm.Modelを埋め込む
+	Content    string `json:"content"` // jsonの「content」と紐付け
 	UserID     uint   // ?UserIDとの関連付け。TodoがUserを1つ持つことを表す。
-}
-
-// 「User」の型を定義
-type User struct {
-	gorm.Model
-	Name         string `json:"name"`
-	Firebase_uid string `json:"firebase_uid"`
-	Todos        []Todo // ?.Todosとの関連付け。UserがTodoを複数持つことを表す。
 }
