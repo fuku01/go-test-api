@@ -14,10 +14,10 @@ import (
 )
 
 func main() {
-	e := echo.New()          // ?Rest APIを使用するためのインスタンスを作成。(echoを使用するために必要)
-	e.Use(middleware.CORS()) // ?CORSを許可する。(フロントとの通信を許可するために必要)
+	e := echo.New()          // ! Rest APIを使用するためのインスタンスを作成。(echoを使用するために必要)
+	e.Use(middleware.CORS()) // ! CORSを許可する。(フロントとの通信を許可するために必要)
 
-	// !Firebaseの認証情報を取得
+	// ! Firebaseの認証情報を取得
 	ctx := context.Background()
 	firebaseApp, err := config.GetFirebaseAuth()
 	if err != nil {
@@ -28,7 +28,7 @@ func main() {
 		panic(err) // エラーがあれば強制終了
 	}
 
-	//!DBの接続情報を取得する
+	// ! DBの接続情報を取得する
 	DBURL, err := config.GetDBURL() // *DBのURLを取得
 	if err != nil {
 		panic(err) // エラーがあれば強制終了
@@ -38,19 +38,19 @@ func main() {
 		panic(err) // エラーがあれば強制終了
 	}
 
-	// !依存関係の注入
+	// ! 依存関係の注入
 	tr := mysgl.NewTodoRepository(db)
 	ur := mysgl.NewUserRepository(db)
 	tu := usecase.NewTodoUsecase(tr)
 	uu := usecase.NewUserUsecase(ur, client)
 	th := handler.NewTodoHandler(tu, uu)
 
-	// !ルーティング
+	// ! ルーティング
 	e.GET("/todos", th.GetAll)         // GETメソッドで/todosにアクセスしたときの処理を定義
 	e.POST("/create", th.Create)       // POSTメソッドで/createにアクセスしたときの処理を定義
 	e.DELETE("/delete/:ID", th.Delete) // DELETEメソッドで/deleteにアクセスしたときの処理を定義
 
-	// !サーバーを起動
+	// ! サーバーの起動
 	e.Logger.Fatal(e.Start(":8000")) // サーバーをポート8000で立ち上げる
 
 	//// e.GET("/hello", func(c echo.Context) error { // GETメソッドで/helloにアクセスしたときの処理を定義

@@ -5,24 +5,26 @@ import (
 	"github.com/fuku01/go-test-api/app/domain/repository"
 )
 
-// ! 1.このファイルで使用する「TodoUsecaseインターフェース（メソッドの集まり）」を定義する。
+// @ Todoに関する、usecaseメソッドの集まり（インターフェース）を定義。
 type TodoUsecase interface {
-	GetAll(userID uint) ([]*model.Todo, error)
-	Create(content string, userID uint) (*model.Todo, error)
-	Delete(ID uint, userID uint) error
+	GetAll(userID uint) ([]*model.Todo, error)               // 全てのTodoを取得するメソッドを定義
+	Create(content string, userID uint) (*model.Todo, error) // 新しいTodoを作成するメソッドを定義
+	Delete(ID uint, userID uint) error                       // 指定したTodoを削除するメソッドを定義
 }
 
-// ! 2.「handler層」の「todo_handler.go」で使用する「TodoUsecaseストラクト（構造体）」を定義する。
+// @ 構造体の型。
 type todoUsecase struct {
 	todoRepository repository.TodoRepository
 }
 
-// ! 3.「handler層」でこのファイルのメソッドを使用するために、「NewTodoUsecaseメソッド」を定義する。
+// @ /handler層で、この構造体を使用する（呼び出す）ための関数を定義。
 func NewTodoUsecase(todoRepository repository.TodoRepository) TodoUsecase {
 	return &todoUsecase{todoRepository: todoRepository}
 }
 
-// GetAllメソッドを定義
+// @ /repositoryで定義し、/infraで実装した【DBに関する処理】を呼び出し、さらに【具体的な処理】を実装。（今回は、そのまま返すだけ。）
+
+// GetAllメソッド
 func (u todoUsecase) GetAll(userID uint) ([]*model.Todo, error) { // GetAllメソッドを定義
 	todos, err := u.todoRepository.GetAll(userID) // DBから全てのレコードを取得。エラーがあればerrに代入。
 	if err != nil {                               // エラーがあれば
@@ -31,7 +33,7 @@ func (u todoUsecase) GetAll(userID uint) ([]*model.Todo, error) { // GetAllメ�
 	return todos, nil // エラーがなければtodosを返す
 }
 
-// Createメソッドを定義
+// Createメソッド
 func (u todoUsecase) Create(content string, userID uint) (*model.Todo, error) { // Createメソッドを定義
 	todo, err := u.todoRepository.Create(content, userID) // フロントから受け取ったcontentをtodoに代入
 	if err != nil {                                       // エラーがあれば
@@ -40,7 +42,7 @@ func (u todoUsecase) Create(content string, userID uint) (*model.Todo, error) { 
 	return todo, nil // エラーがなければtodoを返す
 }
 
-// Dleteメソッドを定義
+// Dleteメソッド
 func (u todoUsecase) Delete(ID uint, userID uint) error { // Dleteメソッドを定義
 	if err := u.todoRepository.Delete(ID, userID); err != nil { // DBから削除。エラーがあればerrに代入。
 		return err // エラーを返す
