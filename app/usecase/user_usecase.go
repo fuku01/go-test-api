@@ -11,6 +11,7 @@ import (
 // @ Userに関する、usecaseメソッドの集まり（インターフェース）を定義。
 type UserUsecase interface {
 	GetUserByToken(ctx context.Context, token string) (*model.User, error) // *「token」から「firebaseUser」を取得し、さらに「firebaseUser.UID」から「user」を取得するメソッドを定義
+	GetLoginUser(userID uint) (*model.User, error)                         // ログイン中のユーザー情報をDBから取得するメソッドを定義
 }
 
 // @ 構造体の型。
@@ -40,4 +41,13 @@ func (u userUsecase) GetUserByToken(ctx context.Context, token string) (*model.U
 		return nil, err
 	}
 	return user, nil
+}
+
+// GetLoginUserメソッド
+func (u userUsecase) GetLoginUser(userID uint) (*model.User, error) {
+	user, err := u.userRepository.GetLoginUser(userID) // DBから「id」が一致する「user」を取得。エラーがあればerrに代入。
+	if err != nil {
+		return nil, err
+	}
+	return user, nil // エラーがなければuserを返す
 }

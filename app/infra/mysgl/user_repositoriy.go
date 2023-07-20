@@ -29,3 +29,13 @@ func (r userRepository) GetUserByFirebaseUID(firebaseUID string) (*model.User, e
 	}
 	return &user, nil // エラーがなければuserを返す
 }
+
+// GetLoginUserメソッド
+func (r userRepository) GetLoginUser(userID uint) (*model.User, error) {
+	var user model.User                                    // User構造体を作成
+	err := r.db.Where("id = ?", userID).First(&user).Error // DBから「id」が一致する「user」を取得。エラーがあればerrに代入。
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil // エラーがなければuserを返す
+}

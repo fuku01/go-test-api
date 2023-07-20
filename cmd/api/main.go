@@ -39,16 +39,18 @@ func main() {
 	}
 
 	// ! 依存関係の注入
-	tr := mysgl.NewTodoRepository(db)
-	ur := mysgl.NewUserRepository(db)
-	tu := usecase.NewTodoUsecase(tr)
-	uu := usecase.NewUserUsecase(ur, client)
-	th := handler.NewTodoHandler(tu, uu)
+	tr := mysgl.NewTodoRepository(db)        // tr=TodoRepository
+	ur := mysgl.NewUserRepository(db)        // ur=UserRepository
+	tu := usecase.NewTodoUsecase(tr)         // tu=TodoUsecase
+	uu := usecase.NewUserUsecase(ur, client) // uu=UserUsecase
+	th := handler.NewTodoHandler(tu, uu)     // th=TodoHandler
+	uh := handler.NewUserHandler(uu)         // uh=UserHandler
 
 	// ! ルーティング
-	e.GET("/todos", th.GetAll)         // GETメソッドで/todosにアクセスしたときの処理を定義
-	e.POST("/create", th.Create)       // POSTメソッドで/createにアクセスしたときの処理を定義
-	e.DELETE("/delete/:ID", th.Delete) // DELETEメソッドで/deleteにアクセスしたときの処理を定義
+	e.GET("/todos", th.GetAll)           // GETメソッドで/todosにアクセスしたときの処理を定義
+	e.POST("/create", th.Create)         // POSTメソッドで/createにアクセスしたときの処理を定義
+	e.DELETE("/delete/:ID", th.Delete)   // DELETEメソッドで/deleteにアクセスしたときの処理を定義
+	e.GET("/loginuser", uh.GetLoginUser) // GETメソッドで/loginuserにアクセスしたときの処理を定義
 
 	// ! サーバーの起動
 	e.Logger.Fatal(e.Start(":8000")) // サーバーをポート8000で立ち上げる
