@@ -23,7 +23,8 @@ func NewTodoRepository(database *gorm.DB) repository.TodoRepository {
 
 // GetAllメソッド
 func (r todoRepository) GetAll(userID uint) ([]*model.Todo, error) { //user_idを引数に追加。
-	var todos []*model.Todo                                     // .Todo構造体の配列を作成
+	var todos []*model.Todo // .Todo構造体の配列を作成
+
 	err := r.db.Where("user_id = ?", userID).Find(&todos).Error // DBからuser_idが一致するレコードを全て取得。エラーがあればerrに代入。
 	if err != nil {
 		return nil, err

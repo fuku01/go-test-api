@@ -5,6 +5,7 @@ import (
 
 	"github.com/fuku01/go-test-api/app/config"
 	"github.com/fuku01/go-test-api/app/handler"
+	"github.com/fuku01/go-test-api/app/infra/firebase"
 	"github.com/fuku01/go-test-api/app/infra/mysgl"
 	"github.com/fuku01/go-test-api/app/usecase"
 	"github.com/labstack/echo/v4"
@@ -39,12 +40,13 @@ func main() {
 	}
 
 	// ! 依存関係の注入
-	tr := mysgl.NewTodoRepository(db)        // tr=TodoRepository
-	ur := mysgl.NewUserRepository(db)        // ur=UserRepository
-	tu := usecase.NewTodoUsecase(tr)         // tu=TodoUsecase
-	uu := usecase.NewUserUsecase(ur, client) // uu=UserUsecase
-	th := handler.NewTodoHandler(tu, uu)     // th=TodoHandler
-	uh := handler.NewUserHandler(uu)         // uh=UserHandler
+	tr := mysgl.NewTodoRepository(db)                      // tr = TodoRepository
+	ur := mysgl.NewUserRepository(db)                      // ur = UserRepository
+	far := firebase.NewFirebaseAuthRepository(client, ctx) // far = FirebaseAuthRepository
+	tu := usecase.NewTodoUsecase(tr, ur, far)              // tu = TodoUsecase
+	uu := usecase.NewUserUsecase(ur, client)               // uu = UserUsecase
+	th := handler.NewTodoHandler(tu, uu)                   // th = TodoHandler
+	uh := handler.NewUserHandler(uu)                       // uh = UserHandler
 
 	// ! ルーティング
 	e.GET("/todos", th.GetAll)           // GETメソッドで/todosにアクセスしたときの処理を定義
