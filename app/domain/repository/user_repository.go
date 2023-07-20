@@ -10,4 +10,5 @@ import "github.com/fuku01/go-test-api/app/domain/model"
 
 type UserRepository interface {
 	GetUserByFirebaseUID(firebaseUID string) (*model.User, error) // 「firebaseUID」から「user」を取得するメソッドを定義
+	GetLoginUser(userID uint) (*model.User, error)                // ログイン中のユーザー情報をDBから取得するメソッドを定義
 }
