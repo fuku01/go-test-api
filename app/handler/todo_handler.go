@@ -12,23 +12,25 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// 1. TodoHandlerインターフェースを定義
-// 2. TodoHandlerインターフェースを実装する構造体は、この3つのメソッドを実装しなければならない
-
+// @ Todoに関する、handlerメソッドの集まり（インターフェース）を定義。
 type TodoHandler interface {
-	GetAll(c echo.Context) error // GetAllメソッドを定義
-	Create(c echo.Context) error // Createメソッドを定義
-	Delete(c echo.Context) error // Deleteメソッドを定義
+	GetAll(c echo.Context) error // 全てのTodoを取得するメソッドを定義
+	Create(c echo.Context) error // 新しいTodoを作成するメソッドを定義
+	Delete(c echo.Context) error // 指定したTodoを削除するメソッドを定義
 }
 
+// @ 構造体の型。
 type todoHandler struct {
 	todoUsecase usecase.TodoUsecase
 	userUsecase usecase.UserUsecase
 }
 
+// @ /mainのルーティングで、この構造体を使用する（呼び出す）ための関数を定義。
 func NewTodoHandler(todoUsecase usecase.TodoUsecase, userUsecase usecase.UserUsecase) TodoHandler {
 	return &todoHandler{todoUsecase: todoUsecase, userUsecase: userUsecase}
 }
+
+// @ フロントからのHTTPリクエストを受け取り、/usecase層で実装した【具体的な処理】を呼び出し、フロントへ返すレスポンスを生成。
 
 // GetAllメソッドを定義
 func (h todoHandler) GetAll(c echo.Context) error {

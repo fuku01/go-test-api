@@ -2,13 +2,9 @@ package model
 
 import "gorm.io/gorm"
 
-// !このファイルでは、「DBのテーブル」と紐付けるための型を定義する。
-
-// （※ gorm.Modelを埋め込むと、ID, CreatedAt, UpdatedAt, DeletedAtが自動で追加される。）
-
-// 「Todo」の型を定義
+// @「DBのテーブル」と紐付けるための「Todo」型を定義する。
 type Todo struct {
-	gorm.Model        // gorm.Modelを埋め込む
+	gorm.Model        //  gorm.Modelを埋め込む。（ID, created_at, updated_at, deleted_atが含まれる。）
 	Content    string `json:"content"` // jsonの「content」と紐付け
-	UserID     uint   // ?UserIDとの関連付け。TodoがUserを1つ持つことを表す。
+	UserID     uint   // ? Userテーブルとの関連付け。TodoがUserを1つ持つことを表す。
 }
