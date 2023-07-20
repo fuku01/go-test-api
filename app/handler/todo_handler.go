@@ -25,6 +25,12 @@ type todoHandler struct {
 	userUsecase usecase.UserUsecase
 }
 
+// *IDとContentだけを含む新しい構造体（練習用）
+type todoContent struct {
+	ID      uint   `json:"ID"`
+	Content string `json:"content"`
+}
+
 // @ /mainのルーティングで、この構造体を使用する（呼び出す）ための関数を定義。
 func NewTodoHandler(todoUsecase usecase.TodoUsecase, userUsecase usecase.UserUsecase) TodoHandler {
 	return &todoHandler{todoUsecase: todoUsecase, userUsecase: userUsecase}
@@ -34,8 +40,8 @@ func NewTodoHandler(todoUsecase usecase.TodoUsecase, userUsecase usecase.UserUse
 
 // GetAllメソッドを定義
 func (h todoHandler) GetAll(c echo.Context) error {
-	authHeader := c.Request().Header.Get("Authorization")
-	token := strings.TrimPrefix(authHeader, "Bearer ")
+	authHeader := c.Request().Header.Get("Authorization") // リクエストヘッダーからAuthorizationを取得
+	token := strings.TrimPrefix(authHeader, "Bearer ")    // Bearerを削除
 
 	user, err := h.userUsecase.GetUserByToken(context.Background(), token)
 	if err != nil {
@@ -48,7 +54,17 @@ func (h todoHandler) GetAll(c echo.Context) error {
 		fmt.Println("エラー：", err)
 		return err // エラーを返す
 	}
-	return c.JSON(http.StatusOK, todos) // 200ステータスコードとtodosを返す
+
+	// *IDとContentだけを含む新しい構造体を作成。（練習用）
+	content := []todoContent{}   // ? TodoContent構造体の[配列]を作成。
+	for _, todo := range todos { // ? todosの中身を順番にtodoに代入。_は、index番号であり、今回は使用しないため_としている。
+		content = append(content, todoContent{ // ? appendとは、[配列]に要素を追加するメソッド。（追加先の[配列]と追加する要素。）
+			ID:      todo.ID,
+			Content: todo.Content,
+		})
+	}
+
+	return c.JSON(http.StatusOK, content) // 200ステータスコードとcontentを返す
 }
 
 // Createメソッドを定義
