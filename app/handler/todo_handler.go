@@ -21,8 +21,8 @@ type TodoHandler interface {
 
 // @ 構造体の型。
 type todoHandler struct {
-	todoUsecase usecase.TodoUsecase
-	userUsecase usecase.UserUsecase
+	tu usecase.TodoUsecase
+	uu usecase.UserUsecase
 }
 
 // *IDとContentだけを含む新しい構造体（練習用）
@@ -32,8 +32,8 @@ type todoContent struct {
 }
 
 // @ /mainのルーティングで、この構造体を使用する（呼び出す）ための関数を定義。
-func NewTodoHandler(todoUsecase usecase.TodoUsecase, userUsecase usecase.UserUsecase) TodoHandler {
-	return &todoHandler{todoUsecase: todoUsecase, userUsecase: userUsecase}
+func NewTodoHandler(tu2 usecase.TodoUsecase, uu2 usecase.UserUsecase) TodoHandler {
+	return &todoHandler{tu: tu2, uu: uu2}
 }
 
 // @ フロントからのHTTPリクエストを受け取り、/usecase層で実装した【具体的な処理】を呼び出し、フロントへ返すレスポンスを生成。
@@ -43,14 +43,8 @@ func (h todoHandler) GetAll(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization") // リクエストヘッダーからAuthorizationを取得
 	token := strings.TrimPrefix(authHeader, "Bearer ")    // Bearerを削除
 
-	user, err := h.userUsecase.GetUserByToken(context.Background(), token)
-	if err != nil {
-		fmt.Println("エラー：", err)
-		return err
-	}
-
-	todos, err := h.todoUsecase.GetAll(user.ID) // 全てのtodoを取得
-	if err != nil {                             // エラーがあれば
+	todos, err := h.tu.GetAll(token) // 全てのtodoを取得
+	if err != nil {                  // エラーがあれば
 		fmt.Println("エラー：", err)
 		return err // エラーを返す
 	}
@@ -72,7 +66,7 @@ func (h todoHandler) Create(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	user, err := h.userUsecase.GetUserByToken(context.Background(), token)
+	user, err := h.uu.GetUserByToken(context.Background(), token)
 	if err != nil {
 		return err
 	}
@@ -82,8 +76,8 @@ func (h todoHandler) Create(c echo.Context) error {
 		return err // エラーがあればエラーを返す
 	}
 
-	createdTodo, err := h.todoUsecase.Create(todo.Content, user.ID) // フロントから受け取ったcontentをtodoに代入
-	if err != nil {                                                 // エラーがあれば
+	createdTodo, err := h.tu.Create(todo.Content, user.ID) // フロントから受け取ったcontentをtodoに代入
+	if err != nil {                                        // エラーがあれば
 		return err // エラーを返す
 	}
 
@@ -95,7 +89,7 @@ func (h todoHandler) Delete(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	user, err := h.userUsecase.GetUserByToken(context.Background(), token)
+	user, err := h.uu.GetUserByToken(context.Background(), token)
 	if err != nil {
 		return err
 	}
@@ -107,7 +101,7 @@ func (h todoHandler) Delete(c echo.Context) error {
 		return err // エラーを返す
 	}
 
-	if err := h.todoUsecase.Delete(uint(ID), user.ID); err != nil { // 変換したidを用いて削除。idをuint（符号なし整数）に変換。
+	if err := h.tu.Delete(uint(ID), user.ID); err != nil { // 変換したidを用いて削除。idをuint（符号なし整数）に変換。
 		return err // エラーを返す
 	}
 	return c.NoContent(http.StatusNoContent) // 204ステータスコードを返す

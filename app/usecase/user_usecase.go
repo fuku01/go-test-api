@@ -16,13 +16,13 @@ type UserUsecase interface {
 
 // @ 構造体の型。
 type userUsecase struct {
-	userRepository repository.UserRepository
-	authClient     *firebase.Client // ?「firebase.Client」は firebaseのメソッドを使用するために必要な情報を格納する。
+	ur         repository.UserRepository
+	authClient *firebase.Client // ?「firebase.Client」は firebaseのメソッドを使用するために必要な情報を格納する。
 }
 
 // @ /handler層で、この構造体を使用する（呼び出す）ための関数を定義。
-func NewUserUsecase(userRepository repository.UserRepository, authClient *firebase.Client) UserUsecase {
-	return &userUsecase{userRepository: userRepository, authClient: authClient}
+func NewUserUsecase(ur2 repository.UserRepository, authClient2 *firebase.Client) UserUsecase {
+	return &userUsecase{ur: ur2, authClient: authClient2}
 }
 
 // @ /repositoryで定義し、/infraで実装した【DBに関する処理】を使用し（呼び出し）、さらに【具体的な処理】を実装。
@@ -36,7 +36,7 @@ func (u userUsecase) GetUserByToken(ctx context.Context, token string) (*model.U
 		return nil, err
 	}
 	// *「firebaseUser.UID」から「user」を取得。
-	user, err := u.userRepository.GetUserByFirebaseUID(firebaseUser.UID) // ?「.UID」は、firebaseのメソッド。firebaseUserのUIDを返す。）
+	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID) // ?「.UID」は、firebaseのメソッド。firebaseUserのUIDを返す。）
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (u userUsecase) GetUserByToken(ctx context.Context, token string) (*model.U
 
 // GetLoginUserメソッド
 func (u userUsecase) GetLoginUser(userID uint) (*model.User, error) {
-	user, err := u.userRepository.GetLoginUser(userID) // DBから「id」が一致する「user」を取得。エラーがあればerrに代入。
+	user, err := u.ur.GetLoginUser(userID) // DBから「id」が一致する「user」を取得。エラーがあればerrに代入。
 	if err != nil {
 		return nil, err
 	}
