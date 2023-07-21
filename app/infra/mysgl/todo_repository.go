@@ -8,27 +8,26 @@ import (
 
 // @ 構造体の型。
 type todoRepository struct {
-	db *gorm.DB
+	db *gorm.DB // 型：gorm.DB（db接続に必要な情報を格納する際に使用する型）
 }
 
 // @ /usecase層で、この構造体を使用する（呼び出す）ための関数を定義。
-// ?　1.引数：db *gorm.DB　= DB接続に必要な情報を格納する。
-// ?　2.戻り値の型：repository.TodoRepository　= 「repository/todo_repository.go」で定義したTodoRepositoryインターフェース。
-// ?　3.戻り値：&TodoRepository{db: db}　= TodoRepository構造体（type TodoRepositoryで定義）を返す。
-func NewTodoRepository(database *gorm.DB) repository.TodoRepository {
-	return &todoRepository{db: database}
+// ? db2に引数でデータベース接続情報を受け取り、repository.TodoRepositoryのインターフェースを満たすような新しいtodoRepository構造体を作成して返す。
+func NewTodoRepository(db2 *gorm.DB) repository.TodoRepository {
+	return &todoRepository{db: db2} // 構造体を返す。(db2とは、引数で受け取ったdb *gorm.DBのこと。）
 }
 
-// @ /repositoryで定義したメソッドの、DBに関する処理を実装。
+// @ /repositoryで定義したメソッドの【DBに関する処理】を実装。
 
 // GetAllメソッド
 func (r todoRepository) GetAll(userID uint) ([]*model.Todo, error) { //user_idを引数に追加。
-	var todos []*model.Todo // .Todo構造体の配列を作成
+	var todos []*model.Todo // Todo構造体の配列を作成
 
 	err := r.db.Where("user_id = ?", userID).Find(&todos).Error // DBからuser_idが一致するレコードを全て取得。エラーがあればerrに代入。
 	if err != nil {
 		return nil, err
 	}
+
 	return todos, nil // エラーがなければtodosを返す
 }
 
@@ -39,7 +38,8 @@ func (r todoRepository) Create(content string, userID uint) (*model.Todo, error)
 	if err != nil {
 		return nil, err
 	}
-	return newTodo, nil // エラーがなければnewTodoを返す
+
+	return newTodo, nil // エラーがなければnewTodo（新しく作成したTodo）を返す
 }
 
 // Deleteメソッド
@@ -50,5 +50,6 @@ func (r todoRepository) Delete(ID uint, userID uint) error {
 	if err != nil {
 		return err
 	}
+
 	return nil // エラーがなければnilを返す
 }

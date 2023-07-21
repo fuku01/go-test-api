@@ -22,31 +22,33 @@ func main() {
 	ctx := context.Background()
 	firebaseApp, err := config.GetFirebaseAuth()
 	if err != nil {
-		panic(err) // エラーがあれば強制終了
+		panic(err)
 	}
-	client, err := firebaseApp.Auth(ctx)
+	authClient, err := firebaseApp.Auth(ctx)
 	if err != nil {
-		panic(err) // エラーがあれば強制終了
+		panic(err)
 	}
 
 	// ! DBの接続情報を取得する
 	DBURL, err := config.GetDBURL() // *DBのURLを取得
 	if err != nil {
-		panic(err) // エラーがあれば強制終了
+		panic(err)
 	}
 	db, err := gorm.Open(mysql.Open(DBURL), &gorm.Config{}) // *DBに接続
 	if err != nil {
-		panic(err) // エラーがあれば強制終了
+		panic(err)
 	}
 
 	// ! 依存関係の注入
-	tr := mysgl.NewTodoRepository(db)                      // tr = TodoRepository
-	ur := mysgl.NewUserRepository(db)                      // ur = UserRepository
-	far := firebase.NewFirebaseAuthRepository(client, ctx) // far = FirebaseAuthRepository
-	tu := usecase.NewTodoUsecase(tr, ur, far)              // tu = TodoUsecase
-	uu := usecase.NewUserUsecase(ur, client)               // uu = UserUsecase
-	th := handler.NewTodoHandler(tu, uu)                   // th = TodoHandler
-	uh := handler.NewUserHandler(uu)                       // uh = UserHandler
+	tr := mysgl.NewTodoRepository(db)                          // tr = TodoRepository
+	ur := mysgl.NewUserRepository(db)                          // ur = UserRepository
+	far := firebase.NewFirebaseAuthRepository(authClient, ctx) // far = FirebaseAuthRepository
+
+	tu := usecase.NewTodoUsecase(tr, ur, far)    // tu = TodoUsecase
+	uu := usecase.NewUserUsecase(ur, authClient) // uu = UserUsecase
+
+	th := handler.NewTodoHandler(tu, uu) // th = TodoHandler
+	uh := handler.NewUserHandler(uu)     // uh = UserHandler
 
 	// ! ルーティング
 	e.GET("/todos", th.GetAll)           // GETメソッドで/todosにアクセスしたときの処理を定義
