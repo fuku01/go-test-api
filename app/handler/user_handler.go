@@ -15,12 +15,13 @@ type UserHandler interface {
 
 // @ 構造体の型。
 type userHandler struct {
-	userUsecase usecase.UserUsecase
+	uu usecase.UserUsecase
 }
 
 // @ /mainのルーティングで、この構造体を使用する（呼び出す）ための関数を定義。
-func NewUserHandler(userUsecase usecase.UserUsecase) UserHandler {
-	return &userHandler{userUsecase: userUsecase}
+// ? uu2に引数でUserUsecaseインターフェースを満たすオブジェクトを受け取り、UserHandlerのインターフェースを満たすような新しいuserHandler構造体を作成して返す。
+func NewUserHandler(uu2 usecase.UserUsecase) UserHandler {
+	return &userHandler{uu: uu2}
 }
 
 // @ フロントからのHTTPリクエストを受け取り、/usecase層で実装した【具体的な処理】を呼び出し、フロントへ返すレスポンスを生成。
@@ -30,7 +31,7 @@ func (h userHandler) GetLoginUser(c echo.Context) error {
 	token := strings.TrimPrefix(authHeader, "Bearer ")    // Bearerを削除
 
 	// ログイン中のユーザー情報を取得
-	user, err := h.userUsecase.GetUserByToken(c.Request().Context(), token)
+	user, err := h.uu.GetUserByToken(c.Request().Context(), token)
 	if err != nil {
 		return err
 	}

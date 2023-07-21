@@ -20,7 +20,7 @@ type UserUsecase interface {
 // @ 構造体の型。
 type userUsecase struct {
 	ur         repository.UserRepository
-	authClient *firebase.Client // 「firebase.Client」は firebaseのメソッドを使用するために必要な情報を格納する。
+	authClient *firebase.Client // 「firebase.Client」はVerifyIDTokenメソッドの結果を格納するための型。
 }
 
 // @ /handler層で、この構造体を使用する（呼び出す）ための関数を定義。

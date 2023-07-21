@@ -20,11 +20,11 @@ func main() {
 
 	// ! Firebaseの認証情報を取得
 	ctx := context.Background()
-	firebaseApp, err := config.GetFirebaseAuth()
+	firebaseApp, err := config.GetFirebaseAuth() // *configのGetFirebaseAuthメソッドを使用し、firebaseAppという構造体を取得
 	if err != nil {
 		panic(err)
 	}
-	authClient, err := firebaseApp.Auth(ctx)
+	authClient, err := firebaseApp.Auth(ctx) // *FirebaseAppのAuthメソッドを使用し、authClientという認証情報を取得
 	if err != nil {
 		panic(err)
 	}
@@ -40,15 +40,18 @@ func main() {
 	}
 
 	// ! 依存関係の注入
-	tr := mysgl.NewTodoRepository(db)                          // tr = TodoRepository
-	ur := mysgl.NewUserRepository(db)                          // ur = UserRepository
-	far := firebase.NewFirebaseAuthRepository(authClient, ctx) // far = FirebaseAuthRepository
+	// *「repository」
+	tr := mysgl.NewTodoRepository(db) // 引数にDB接続情報を渡す。
+	ur := mysgl.NewUserRepository(db) // 引数にDB接続情報を渡す。
+	far := firebase.NewFirebaseAuthRepository(authClient, ctx)
 
-	tu := usecase.NewTodoUsecase(tr, ur, far)    // tu = TodoUsecase
-	uu := usecase.NewUserUsecase(ur, authClient) // uu = UserUsecase
+	// *「usecase」
+	tu := usecase.NewTodoUsecase(tr, ur, far)
+	uu := usecase.NewUserUsecase(ur, authClient)
 
-	th := handler.NewTodoHandler(tu, uu) // th = TodoHandler
-	uh := handler.NewUserHandler(uu)     // uh = UserHandler
+	// *「handler」
+	th := handler.NewTodoHandler(tu, uu)
+	uh := handler.NewUserHandler(uu)
 
 	// ! ルーティング
 	e.GET("/todos", th.GetAll)           // GETメソッドで/todosにアクセスしたときの処理を定義
