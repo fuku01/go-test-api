@@ -8,18 +8,17 @@ import (
 
 // @ 構造体の型。
 type userRepository struct {
-	db *gorm.DB
+	db *gorm.DB // 型：gorm.DB（db接続に必要な情報を格納する際に使用する型）
 }
 
 // @ /usecase層で、この構造体を使用する（呼び出す）ための関数を定義。
-// ?　1.引数：db *gorm.DB　= DB接続に必要な情報を格納する。
-// ?　2.戻り値の型：repository.UserRepository　= 「repository/user_repository.go」で定義したUserRepositoryインターフェース。
-// ?　3.戻り値：&UserRepository{db: db}　= UserRepository構造体（type UserRepositoryで定義）を返す。
-func NewUserRepository(database *gorm.DB) repository.UserRepository {
-	return &userRepository{db: database}
+// ? db2に引数でデータベース接続情報を受け取り、repository.UserRepositoryのインターフェースを満たすような新しいuserRepository構造体を作成して返す。
+func NewUserRepository(db2 *gorm.DB) repository.UserRepository {
+	return &userRepository{db: db2}
 }
 
-// @ /repositoryで定義したメソッドの、DBに関する処理を実装。
+// @ /repositoryで定義したメソッドの【DBに関する処理】を実装。
+
 // GetUserByFirebaseUIDメソッド　（※「firebaseUID」から「user」を取得するメソッド）
 func (r userRepository) GetUserByFirebaseUID(firebaseUID string) (*model.User, error) {
 	var user model.User                                                   // User構造体を作成

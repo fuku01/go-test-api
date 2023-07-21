@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,9 +13,14 @@ import (
 
 // @ Todoに関する、handlerメソッドの集まり（インターフェース）を定義。
 type TodoHandler interface {
-	GetAll(c echo.Context) error // 全てのTodoを取得するメソッドを定義
-	Create(c echo.Context) error // 新しいTodoを作成するメソッドを定義
-	Delete(c echo.Context) error // 指定したTodoを削除するメソッドを定義
+	// 全てのTodoを取得するメソッドを定義
+	GetAll(c echo.Context) error //　echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
+
+	// 新しいTodoを作成するメソッドを定義
+	Create(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
+
+	// 指定したTodoを削除するメソッドを定義
+	Delete(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
 }
 
 // @ 構造体の型。
@@ -32,6 +36,7 @@ type todoContent struct {
 }
 
 // @ /mainのルーティングで、この構造体を使用する（呼び出す）ための関数を定義。
+// ? tu2,uu2に引数で各々のインターフェースを満たすオブジェクトを受け取り、TodoHandlerのインターフェースを満たすような新しいtodoHandler構造体を作成して返す。
 func NewTodoHandler(tu2 usecase.TodoUsecase, uu2 usecase.UserUsecase) TodoHandler {
 	return &todoHandler{tu: tu2, uu: uu2}
 }
@@ -66,18 +71,13 @@ func (h todoHandler) Create(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	user, err := h.uu.GetUserByToken(context.Background(), token)
-	if err != nil {
-		return err
-	}
-
 	todo := &model.Todo{}                // 「Todo」型のポインタを生成
 	if err := c.Bind(todo); err != nil { // フロントから受け取ったJSONをtodoにバインド
 		return err // エラーがあればエラーを返す
 	}
 
-	createdTodo, err := h.tu.Create(todo.Content, user.ID) // フロントから受け取ったcontentをtodoに代入
-	if err != nil {                                        // エラーがあれば
+	createdTodo, err := h.tu.Create(todo.Content, token) // フロントから受け取ったcontentをtodoに代入
+	if err != nil {                                      // エラーがあれば
 		return err // エラーを返す
 	}
 
@@ -89,11 +89,6 @@ func (h todoHandler) Delete(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	user, err := h.uu.GetUserByToken(context.Background(), token)
-	if err != nil {
-		return err
-	}
-
 	idParam := c.Param("ID") // URLからTODOのidパラメータを取得
 
 	ID, err := strconv.Atoi(idParam) // idパラメータをintに変換
@@ -101,8 +96,9 @@ func (h todoHandler) Delete(c echo.Context) error {
 		return err // エラーを返す
 	}
 
-	if err := h.tu.Delete(uint(ID), user.ID); err != nil { // 変換したidを用いて削除。idをuint（符号なし整数）に変換。
+	if err := h.tu.Delete(uint(ID), token); err != nil { // 変換したidを用いて削除。idをuint（符号なし整数）に変換。
 		return err // エラーを返す
 	}
+
 	return c.NoContent(http.StatusNoContent) // 204ステータスコードを返す
 }
