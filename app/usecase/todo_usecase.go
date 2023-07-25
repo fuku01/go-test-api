@@ -18,6 +18,9 @@ type TodoUsecase interface {
 
 	// TagテーブルとTodoテーブルを結合して、全てのTodoに加えて、そのTodoが持つ全てのTagを取得するメソッドを定義
 	GetAllWithTags(token string) ([]*model.Todo, error)
+
+	// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
+	CreateWithTags(content string, token string, tagNames []string) (*model.Todo, error)
 }
 
 // @ 構造体の型。
@@ -36,7 +39,7 @@ func NewTodoUsecase(tr2 repository.TodoRepository, ur2 repository.UserRepository
 // @ /repositoryで定義し、/infraで実装した【DBに関する処理】を呼び出し、さらに【具体的な処理】を実装。（今回は、そのまま返すだけ。）
 
 // GetAllメソッド
-func (u todoUsecase) GetAll(token string) ([]*model.Todo, error) { // GetAllメソッドを定義
+func (u todoUsecase) GetAll(token string) ([]*model.Todo, error) {
 
 	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
 	if err != nil {
@@ -54,7 +57,7 @@ func (u todoUsecase) GetAll(token string) ([]*model.Todo, error) { // GetAllメ�
 }
 
 // GetAllWithTagsメソッド
-func (u todoUsecase) GetAllWithTags(token string) ([]*model.Todo, error) { // GetAllWithTagsメソッドを定義
+func (u todoUsecase) GetAllWithTags(token string) ([]*model.Todo, error) {
 
 	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
 	if err != nil {
@@ -71,8 +74,8 @@ func (u todoUsecase) GetAllWithTags(token string) ([]*model.Todo, error) { // Ge
 	return todosWithTags, nil // エラーがなければtodosWithTagsを返す
 }
 
-// Createメソッド
-func (u todoUsecase) Create(content string, token string) (*model.Todo, error) { // Createメソッドを定義
+// *CreateWithTagsメソッド
+func (u todoUsecase) CreateWithTags(content string, token string, tagNames []string) (*model.Todo, error) {
 
 	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
 	if err != nil {
@@ -82,15 +85,33 @@ func (u todoUsecase) Create(content string, token string) (*model.Todo, error) {
 	if err != nil {
 		return nil, err
 	}
-	todo, err := u.tr.Create(content, user.ID) // フロントから受け取ったcontentをtodoに代入。
-	if err != nil {                            // エラーがあれば
+	newTodo, err := u.tr.CreateWithTags(content, user.ID, tagNames) // DBに保存。エラーがあればerrに代入。
+	if err != nil {                                                 // エラーがあれば
 		return nil, err // エラーを返す
 	}
-	return todo, nil // エラーがなければtodoを返す
+	return newTodo, nil // エラーがなければtodoを返す
+}
+
+// Createメソッド
+func (u todoUsecase) Create(content string, token string) (*model.Todo, error) {
+
+	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
+	if err != nil {
+		return nil, err
+	}
+	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID) // ユーザーを取得
+	if err != nil {
+		return nil, err
+	}
+	newTodo, err := u.tr.Create(content, user.ID) // フロントから受け取ったcontentをtodoに代入。
+	if err != nil {                               // エラーがあれば
+		return nil, err // エラーを返す
+	}
+	return newTodo, nil // エラーがなければtodoを返す
 }
 
 // Dleteメソッド
-func (u todoUsecase) Delete(ID uint, token string) error { // Dleteメソッドを定義
+func (u todoUsecase) Delete(ID uint, token string) error {
 
 	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
 	if err != nil {
