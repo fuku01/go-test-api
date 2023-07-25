@@ -15,6 +15,9 @@ type TodoUsecase interface {
 
 	// 指定したTodoを削除するメソッドを定義
 	Delete(ID uint, token string) error
+
+	// TagテーブルとTodoテーブルを結合して、全てのTodoに加えて、そのTodoが持つ全てのTagを取得するメソッドを定義
+	GetAllWithTags(token string) ([]*model.Todo, error)
 }
 
 // @ 構造体の型。
@@ -35,11 +38,11 @@ func NewTodoUsecase(tr2 repository.TodoRepository, ur2 repository.UserRepository
 // GetAllメソッド
 func (u todoUsecase) GetAll(token string) ([]*model.Todo, error) { // GetAllメソッドを定義
 
-	firebaseUser, err := u.far.VerifyIDToken(token)
+	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
 	if err != nil {
 		return nil, err
 	}
-	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID)
+	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID) // ユーザーを取得
 	if err != nil {
 		return nil, err
 	}
@@ -50,14 +53,32 @@ func (u todoUsecase) GetAll(token string) ([]*model.Todo, error) { // GetAllメ�
 	return todos, nil // エラーがなければtodosを返す
 }
 
-// Createメソッド
-func (u todoUsecase) Create(content string, token string) (*model.Todo, error) { // Createメソッドを定義
+// GetAllWithTagsメソッド
+func (u todoUsecase) GetAllWithTags(token string) ([]*model.Todo, error) { // GetAllWithTagsメソッドを定義
 
-	firebaseUser, err := u.far.VerifyIDToken(token)
+	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
 	if err != nil {
 		return nil, err
 	}
-	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID)
+	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID) // ユーザーを取得
+	if err != nil {
+		return nil, err
+	}
+	todosWithTags, err := u.tr.GetAllWithTags(user.ID) // DBから全てのレコードを取得。エラーがあればerrに代入。
+	if err != nil {                                    // エラーがあれば
+		return nil, err // エラーを返す
+	}
+	return todosWithTags, nil // エラーがなければtodosWithTagsを返す
+}
+
+// Createメソッド
+func (u todoUsecase) Create(content string, token string) (*model.Todo, error) { // Createメソッドを定義
+
+	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
+	if err != nil {
+		return nil, err
+	}
+	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID) // ユーザーを取得
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +92,11 @@ func (u todoUsecase) Create(content string, token string) (*model.Todo, error) {
 // Dleteメソッド
 func (u todoUsecase) Delete(ID uint, token string) error { // Dleteメソッドを定義
 
-	firebaseUser, err := u.far.VerifyIDToken(token)
+	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
 	if err != nil {
 		return err
 	}
-	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID)
+	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID) // ユーザーを取得
 	if err != nil {
 		return err
 	}

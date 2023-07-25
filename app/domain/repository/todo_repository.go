@@ -13,4 +13,7 @@ type TodoRepository interface {
 
 	// 指定したTodoを削除するメソッドを定義
 	Delete(ID uint, userID uint) error
+
+	// TagテーブルとTodoテーブルを結合して、全てのTodoに加えて、そのTodoが持つ全てのTagを取得するメソッドを定義
+	GetAllWithTags(userID uint) ([]*model.Todo, error)
 }

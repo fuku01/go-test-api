@@ -21,6 +21,10 @@ type TodoHandler interface {
 
 	// 指定したTodoを削除するメソッドを定義
 	Delete(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
+
+	// TagテーブルとTodoテーブルを結合して、全てのTodoに加えて、そのTodoが持つ全てのTagを取得するメソッドを定義
+	GetAllWithTags(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
+
 }
 
 // @ 構造体の型。
@@ -64,6 +68,19 @@ func (h todoHandler) GetAll(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, content) // 200ステータスコードとcontentを返す
+}
+
+// GetAllWithTagsメソッドを定義
+func (h todoHandler) GetAllWithTags(c echo.Context) error {
+	authHeader := c.Request().Header.Get("Authorization") // リクエストヘッダーからAuthorizationを取得
+	token := strings.TrimPrefix(authHeader, "Bearer ")    // Bearerを削除
+
+	todosWithTags, err := h.tu.GetAllWithTags(token) // 全てのtodoとそのtodoが持つ全てのtagを取得
+	if err != nil {                                  // エラーがあれば
+		return err // エラーを返す
+	}
+
+	return c.JSON(http.StatusOK, todosWithTags) // 200ステータスコードとtodosWithTagsを返す
 }
 
 // Createメソッドを定義
