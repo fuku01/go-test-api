@@ -31,6 +31,18 @@ func (r todoRepository) GetAll(userID uint) ([]*model.Todo, error) { //user_id�
 	return todos, nil // エラーがなければtodosを返す
 }
 
+// GetAllWithTagsメソッド
+func (r todoRepository) GetAllWithTags(userID uint) ([]*model.Todo, error) {
+	var todos []*model.Todo // Todo構造体の配列を作成
+
+	err := r.db.Preload("Tags").Where("user_id = ?", userID).Find(&todos).Error // Preloadとは、指定した関連付けを事前に読み込むことができるメソッド。ここでは、Todoに紐づくTagを事前に読み込んでいる。
+	if err != nil {
+		return nil, err
+	}
+
+	return todos, nil // エラーがなければtodosを返す
+}
+
 // Createメソッド
 func (r todoRepository) Create(content string, userID uint) (*model.Todo, error) {
 	newTodo := &model.Todo{Content: content, UserID: userID} // contentとuser_idを引数にTodo構造体を作成
