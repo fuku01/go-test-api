@@ -16,4 +16,7 @@ type TodoRepository interface {
 
 	// TagテーブルとTodoテーブルを結合して、全てのTodoに加えて、そのTodoが持つ全てのTagを取得するメソッドを定義
 	GetAllWithTags(userID uint) ([]*model.Todo, error)
+
+	// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
+	CreateWithTags(content string, userID uint, tagNames []string) (*model.Todo, error)
 }

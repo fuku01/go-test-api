@@ -43,6 +43,41 @@ func (r todoRepository) GetAllWithTags(userID uint) ([]*model.Todo, error) {
 	return todos, nil // エラーがなければtodosを返す
 }
 
+// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
+func (r todoRepository) CreateWithTags(content string, userID uint, tagNames []string) (*model.Todo, error) { // contentとuserIDとtagNamesを引数に追加し、戻り値を*model.Todoにする。
+
+	// 1. Todoを作成
+	newTodo := &model.Todo{Content: content, UserID: userID} // contentとuser_idを引数にTodo構造体を作成
+	tx := r.db.Begin()                                       // 「Begin()」とは、トランザクションを開始するメソッド。（開始すると、以降の処理は全てトランザクション内で実行されるため、エラーがあればロールバック（処理を元に戻す）される。）
+	err := tx.Create(newTodo).Error                          //「tx.Create」とは、トランザクション内でDBに保存するメソッド。
+	if err != nil {
+		tx.Rollback() // エラーがあればロールバック（処理を元に戻す）
+		return nil, err
+	}
+
+	// 2. Tagを作成
+	newTags := []model.Tag{}        // Tag構造体の配列を作成
+	for _, name := range tagNames { // tagNames（Tag構造体の配列）をループさせる
+		newTags = append(newTags, model.Tag{Name: name}) // appendとは、[配列]に要素を追加するメソッド。（追加先の[配列]と追加する要素。）
+	}
+
+	// 3. TodoとTagを関連付ける
+	err = tx.Model(newTodo).Association("Tags").Append(newTags) // 「tx.Model(newTodo).Association("Tags")」とは、TodoとTagを関連付けるメソッド。「Append(newTags)」とは、関連付けるTagを追加するメソッド。
+	if err != nil {
+		tx.Rollback() // エラーがあればロールバック
+		return nil, err
+	}
+
+	err = tx.Commit().Error // 「tx.Commit()」とは、トランザクションをコミット(処理を確定)するメソッド。
+	if err != nil {
+		tx.Rollback() // エラーがあればロールバック（処理を元に戻す）
+		return nil, err
+	}
+
+	return newTodo, nil // エラーがなければnewTodo（新しく作成したTodo）を返す
+
+}
+
 // Createメソッド
 func (r todoRepository) Create(content string, userID uint) (*model.Todo, error) {
 	newTodo := &model.Todo{Content: content, UserID: userID} // contentとuser_idを引数にTodo構造体を作成

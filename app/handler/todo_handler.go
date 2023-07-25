@@ -25,6 +25,8 @@ type TodoHandler interface {
 	// TagテーブルとTodoテーブルを結合して、全てのTodoに加えて、そのTodoが持つ全てのTagを取得するメソッドを定義
 	GetAllWithTags(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
 
+	// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
+	CreateWithTags(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
 }
 
 // @ 構造体の型。
@@ -33,10 +35,16 @@ type todoHandler struct {
 	uu usecase.UserUsecase
 }
 
-// *IDとContentだけを含む新しい構造体（練習用）
+// IDとContentだけを含む新しい構造体（練習用）
 type todoContent struct {
 	ID      uint   `json:"ID"`
 	Content string `json:"content"`
+}
+
+// *TodoとそのTodoが持つ全てのTagを含む新しい構造体
+type TodoWithTags struct {
+	Todo     *model.Todo `json:"todo"`
+	TagNames []string    `json:"tagNames"`
 }
 
 // @ /mainのルーティングで、この構造体を使用する（呼び出す）ための関数を定義。
@@ -58,7 +66,7 @@ func (h todoHandler) GetAll(c echo.Context) error {
 		return err // エラーを返す
 	}
 
-	// *IDとContentだけを含む新しい構造体を作成。（練習用）
+	// IDとContentだけを含む新しい構造体を作成。（練習用）
 	content := []todoContent{}   // ? TodoContent構造体の[配列]を作成。
 	for _, todo := range todos { // ? todosの中身を順番にtodoに代入。_は、index番号であり、今回は使用しないため_としている。
 		content = append(content, todoContent{ // ? appendとは、[配列]に要素を追加するメソッド。（追加先の[配列]と追加する要素。）
@@ -83,6 +91,24 @@ func (h todoHandler) GetAllWithTags(c echo.Context) error {
 	return c.JSON(http.StatusOK, todosWithTags) // 200ステータスコードとtodosWithTagsを返す
 }
 
+// *CreateWithTagsメソッドを定義
+func (h todoHandler) CreateWithTags(c echo.Context) error {
+	authHeader := c.Request().Header.Get("Authorization") // リクエストヘッダーからAuthorizationを取得
+	token := strings.TrimPrefix(authHeader, "Bearer ")    // Bearerを削除
+
+	todoWithTags := &TodoWithTags{} // TodoとそのTodoが持つ全てのTagを含む新しい構造体を作成
+	if err := c.Bind(todoWithTags); err != nil {
+		return err
+	}
+
+	newTodo, err := h.tu.CreateWithTags(todoWithTags.Todo.Content, token, todoWithTags.TagNames)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, newTodo)
+}
+
 // Createメソッドを定義
 func (h todoHandler) Create(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
@@ -93,12 +119,12 @@ func (h todoHandler) Create(c echo.Context) error {
 		return err // エラーがあればエラーを返す
 	}
 
-	createdTodo, err := h.tu.Create(todo.Content, token) // フロントから受け取ったcontentをtodoに代入
-	if err != nil {                                      // エラーがあれば
+	newTodo, err := h.tu.Create(todo.Content, token) // フロントから受け取ったcontentをtodoに代入
+	if err != nil {                                  // エラーがあれば
 		return err // エラーを返す
 	}
 
-	return c.JSON(http.StatusOK, createdTodo) // 200ステータスコードとcreatedTodoを返す
+	return c.JSON(http.StatusOK, newTodo) // 200ステータスコードとcreatedTodoを返す
 }
 
 // Dleteメソッドを定義
