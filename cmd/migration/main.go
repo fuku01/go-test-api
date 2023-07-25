@@ -7,22 +7,23 @@ import (
 	"gorm.io/gorm"                                   // gormを使用するためのパッケージ
 )
 
-// Todo: マイグレーションを実行する関数(migrationフォルダ内で「go run main.go」コマンドで実行する)
+// ! マイグレーションを実行する関数(migrationフォルダ内で「go run main.go」コマンドで実行する)
+
 func main() {
 	// DBのURLを取得
 	DBURL, err := config.GetDBURL()
 	if err != nil {
-		panic(err) // !エラーがあればプログラムを強制終了
+		panic(err)
 	}
 	// DBに接続
 	db, err := gorm.Open(mysql.Open(DBURL), &gorm.Config{})
 	if err != nil {
-		panic(err) // !エラーがあればプログラムを強制終了
+		panic(err)
 	}
-	// 「User]と「Todo」の型（モデル）に基づいてテーブルを作成
-	db.AutoMigrate(&model.User{}, &model.Todo{})
+	// @「User]と「Todo」の型（モデル）に基づいてテーブルを作成
+	db.AutoMigrate(&model.User{}, &model.Todo{}, &model.Tag{})
 	if err != nil {
-		panic(err) // !エラーがあればプログラムを強制終了
+		panic(err)
 	}
 
 }
