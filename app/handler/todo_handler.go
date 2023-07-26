@@ -27,6 +27,9 @@ type TodoHandler interface {
 
 	// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
 	CreateWithTags(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
+
+	// *DeleteWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に削除）
+	DeleteWithTags(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
 }
 
 // @ 構造体の型。
@@ -125,6 +128,25 @@ func (h todoHandler) Create(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, newTodo) // 200ステータスコードとcreatedTodoを返す
+}
+
+// * DeleteWithTagsメソッドを定義
+func (h todoHandler) DeleteWithTags(c echo.Context) error {
+	authHeader := c.Request().Header.Get("Authorization")
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	idParam := c.Param("ID") // URLからTODOのidパラメータを取得
+
+	ID, err := strconv.Atoi(idParam) // idパラメータをintに変換
+	if err != nil {                  // 変換エラーがあれば
+		return err // エラーを返す
+	}
+
+	if err := h.tu.DeleteWithTags(uint(ID), token); err != nil { // 変換したidを用いて削除。idをuint（符号なし整数）に変換。
+		return err // エラーを返す
+	}
+
+	return c.NoContent(http.StatusNoContent) // 204ステータスコードを返す
 }
 
 // Dleteメソッドを定義

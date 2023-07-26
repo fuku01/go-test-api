@@ -54,12 +54,13 @@ func main() {
 	uh := handler.NewUserHandler(uu)
 
 	// ! ルーティング
-	e.GET("/todos", th.GetAll)                   // GETメソッドで/todosにアクセスしたときの処理を定義
-	e.POST("/create", th.Create)                 // POSTメソッドで/createにアクセスしたときの処理を定義
-	e.DELETE("/delete/:ID", th.Delete)           // DELETEメソッドで/deleteにアクセスしたときの処理を定義
-	e.GET("/loginuser", uh.GetLoginUser)         // GETメソッドで/loginuserにアクセスしたときの処理を定義
-	e.GET("/todoswithtags", th.GetAllWithTags)   // GETメソッドで/todoswithtagsにアクセスしたときの処理を定義
-	e.POST("/createwithtags", th.CreateWithTags) // POSTメソッドで/createwithtagsにアクセスしたときの処理を定義
+	e.GET("/todos", th.GetAll)                         // GETメソッドで/todosにアクセスしたときの処理を定義
+	e.POST("/create", th.Create)                       // POSTメソッドで/createにアクセスしたときの処理を定義
+	e.DELETE("/delete/:ID", th.Delete)                 // DELETEメソッドで/deleteにアクセスしたときの処理を定義
+	e.GET("/loginuser", uh.GetLoginUser)               // GETメソッドで/loginuserにアクセスしたときの処理を定義
+	e.GET("/todoswithtags", th.GetAllWithTags)         // GETメソッドで/todoswithtagsにアクセスしたときの処理を定義
+	e.POST("/createwithtags", th.CreateWithTags)       // POSTメソッドで/createwithtagsにアクセスしたときの処理を定義
+	e.DELETE("/deletewithtags/:ID", th.DeleteWithTags) // DELETEメソッドで/deletewithtagsにアクセスしたときの処理を定義
 
 	// ! サーバーの起動
 	e.Logger.Fatal(e.Start(":8000")) // サーバーをポート8000で立ち上げる

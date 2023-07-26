@@ -21,6 +21,9 @@ type TodoUsecase interface {
 
 	// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
 	CreateWithTags(content string, token string, tagNames []string) (*model.Todo, error)
+
+	// *DeleteWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に削除）
+	DeleteWithTags(ID uint, token string) error
 }
 
 // @ 構造体の型。
@@ -108,6 +111,24 @@ func (u todoUsecase) Create(content string, token string) (*model.Todo, error) {
 		return nil, err // エラーを返す
 	}
 	return newTodo, nil // エラーがなければtodoを返す
+}
+
+// *DeleteWithTagsメソッド(トランザクションを使用して、TodoとTagを同時に削除)
+func (u todoUsecase) DeleteWithTags(ID uint, token string) error {
+
+	firebaseUser, err := u.far.VerifyIDToken(token) // トークンを検証
+	if err != nil {
+		return err
+	}
+	user, err := u.ur.GetUserByFirebaseUID(firebaseUser.UID) // ユーザーを取得
+	if err != nil {
+		return err
+	}
+
+	if err := u.tr.DeleteWithTags(ID, user.ID); err != nil { // DBから削除。エラーがあればerrに代入。
+		return err // エラーを返す
+	}
+	return nil // エラーがなければnilを返す
 }
 
 // Dleteメソッド

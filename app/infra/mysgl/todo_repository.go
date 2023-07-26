@@ -43,13 +43,13 @@ func (r todoRepository) GetAllWithTags(userID uint) ([]*model.Todo, error) {
 	return todos, nil // エラーがなければtodosを返す
 }
 
-// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
+// ! CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
 func (r todoRepository) CreateWithTags(content string, userID uint, tagNames []string) (*model.Todo, error) { // contentとuserIDとtagNamesを引数に追加し、戻り値を*model.Todoにする。
-
-	// 1. Todoを作成
 	newTodo := &model.Todo{Content: content, UserID: userID} // contentとuser_idを引数にTodo構造体を作成
 	tx := r.db.Begin()                                       // 「Begin()」とは、トランザクションを開始するメソッド。（開始すると、以降の処理は全てトランザクション内で実行されるため、エラーがあればロールバック（処理を元に戻す）される。）
-	err := tx.Create(newTodo).Error                          //「tx.Create」とは、トランザクション内でDBに保存するメソッド。
+
+	// 1. Todoを作成
+	err := tx.Create(newTodo).Error //「tx.Create」とは、トランザクション内でDBに保存するメソッド。
 	if err != nil {
 		tx.Rollback() // エラーがあればロールバック（処理を元に戻す）
 		return nil, err
@@ -89,11 +89,46 @@ func (r todoRepository) Create(content string, userID uint) (*model.Todo, error)
 	return newTodo, nil // エラーがなければnewTodo（新しく作成したTodo）を返す
 }
 
+// ! DeleteWithTagsメソッド（トランザクションを使用して、Todoとそれに紐付くTagを全て削除する）
+func (r todoRepository) DeleteWithTags(ID uint, userID uint) error {
+	todo := &model.Todo{} // 空のTodo構造体を作成
+	tx := r.db.Begin()    // トランザクションを開始
+
+	// 1.Todoを取得
+	err := r.db.Where("user_id = ?", userID).First(todo, ID).Error
+	if err != nil {
+		tx.Rollback() // エラーがあればロールバック
+		return err
+	}
+
+	// 2.Todoに紐づくTagを全て削除する
+	err = tx.Where("todo_id = ?", todo.ID).Unscoped().Delete(&model.Tag{}).Error
+	if err != nil {
+		tx.Rollback() // エラーがあればロールバック
+		return err
+	}
+
+	// 3.Todoを削除
+	err = tx.Unscoped().Delete(todo).Error
+	if err != nil {
+		tx.Rollback() // エラーがあればロールバック
+		return err
+	}
+
+	err = tx.Commit().Error // トランザクションをコミット
+	if err != nil {
+		tx.Rollback() // エラーがあればロールバック
+		return err
+	}
+
+	return nil // エラーがなければnilを返す
+}
+
 // Deleteメソッド
 func (r todoRepository) Delete(ID uint, userID uint) error {
 	todo := &model.Todo{}                             // まず、空のTodo構造体を作成
 	r.db.Where("user_id = ?", userID).First(todo, ID) // 次に、DBからuser_idが一致するレコードを取得
-	err := r.db.Unscoped().Delete(todo).Error         // 最後に、取得したレコードを削除。エラーがあればerrに代入。
+	err := r.db.Unscoped().Delete(todo).Error         // 最後に、取得したレコードを削除。(Unscoped()とは、物理削除を行うメソッド。)
 	if err != nil {
 		return err
 	}
