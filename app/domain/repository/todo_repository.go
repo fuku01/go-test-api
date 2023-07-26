@@ -19,4 +19,7 @@ type TodoRepository interface {
 
 	// *CreateWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に作成）
 	CreateWithTags(content string, userID uint, tagNames []string) (*model.Todo, error)
+
+	// *DeleteWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に削除）
+	DeleteWithTags(ID uint, userID uint) error
 }
