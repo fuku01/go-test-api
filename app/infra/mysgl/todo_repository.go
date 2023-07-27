@@ -54,13 +54,11 @@ func (r todoRepository) CreateWithTags(content string, userID uint, tagNames []s
 		tx.Rollback() // エラーがあればロールバック（処理を元に戻す）
 		return nil, err
 	}
-
 	// 2. Tagを作成
 	newTags := []model.Tag{}        // Tag構造体の配列を作成
 	for _, name := range tagNames { // tagNames（Tag構造体の配列）をループさせる
 		newTags = append(newTags, model.Tag{Name: name}) // appendとは、[配列]に要素を追加するメソッド。（追加先の[配列]と追加する要素。）
 	}
-
 	// 3. TodoとTagを関連付ける
 	err = tx.Model(newTodo).Association("Tags").Append(newTags) // 「tx.Model(newTodo).Association("Tags")」とは、TodoとTagを関連付けるメソッド。「Append(newTags)」とは、関連付けるTagを追加するメソッド。
 	if err != nil {
@@ -100,14 +98,12 @@ func (r todoRepository) DeleteWithTags(ID uint, userID uint) error {
 		tx.Rollback() // エラーがあればロールバック
 		return err
 	}
-
 	// 2.Todoに紐づくTagを全て削除する
 	err = tx.Where("todo_id = ?", todo.ID).Unscoped().Delete(&model.Tag{}).Error
 	if err != nil {
 		tx.Rollback() // エラーがあればロールバック
 		return err
 	}
-
 	// 3.Todoを削除
 	err = tx.Unscoped().Delete(todo).Error
 	if err != nil {
@@ -134,4 +130,68 @@ func (r todoRepository) Delete(ID uint, userID uint) error {
 	}
 
 	return nil // エラーがなければnilを返す
+}
+
+// ! EditWithTagsメソッド(トランザクションを使用して、Todoとそれに紐付くTagの追加と削除を行う)
+func (r todoRepository) EditWithTags(ID uint, userID uint, content string, addTagNames []string, deleteTagIDs []uint) (*model.Todo, error) {
+	// トランザクションを開始します。
+	tx := r.db.Begin()
+
+	// 現在のTodoを取得します。
+	todo := &model.Todo{}
+	err := tx.Where("user_id = ?", userID).First(todo, ID).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// contentが空でなければ、contentを更新します。
+	if content != "" {
+		todo.Content = content
+		err = tx.Save(todo).Error
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	// 追加すべき新しいタグがあれば、それをTodoに追加します。
+	if len(addTagNames) > 0 {
+		for _, name := range addTagNames { // addTagNamesの要素を1つずつ取り出す
+			err = tx.Create(&model.Tag{Name: name, Todo: todo}).Error // Todoに紐付くTagを作成。
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		}
+	}
+
+	// 削除すべきタグがあれば、それをTodoから削除します。
+	if len(deleteTagIDs) > 0 {
+		for _, id := range deleteTagIDs { // deleteTagIDsの要素を1つずつ取り出す
+
+			tag := &model.Tag{}                                          // 空のTag構造体を作成
+			err := tx.Where("todo_id = ?", todo.ID).First(tag, id).Error // todo_idが一致するレコードを取得
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+
+			err = tx.Unscoped().Delete(tag).Error // 取得したレコードを削除
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		}
+	}
+
+	// すべての操作が正常に終了したら、トランザクションをコミットします。
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// 最終的に更新されたTodoを返します。
+	return todo, nil
 }

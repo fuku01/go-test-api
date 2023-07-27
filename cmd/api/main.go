@@ -61,6 +61,7 @@ func main() {
 	e.GET("/todoswithtags", th.GetAllWithTags)         // GETメソッドで/todoswithtagsにアクセスしたときの処理を定義
 	e.POST("/createwithtags", th.CreateWithTags)       // POSTメソッドで/createwithtagsにアクセスしたときの処理を定義
 	e.DELETE("/deletewithtags/:ID", th.DeleteWithTags) // DELETEメソッドで/deletewithtagsにアクセスしたときの処理を定義
+	e.PUT("/editwithtags/:ID", th.EditWithTags)        // PUTメソッドで/editwithtagsにアクセスしたときの処理を定義
 
 	// ! サーバーの起動
 	e.Logger.Fatal(e.Start(":8000")) // サーバーをポート8000で立ち上げる
