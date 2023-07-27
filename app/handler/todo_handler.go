@@ -30,6 +30,9 @@ type TodoHandler interface {
 
 	// *DeleteWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に削除）
 	DeleteWithTags(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
+
+	// !EditWithTagsメソッド(トランザクションを使用して、Todoとそれに紐付くTagの追加と削除を行う)
+	EditWithTags(c echo.Context) error // echo.Contextとは、HTTPリクエストとレスポンスを扱うための構造体。
 }
 
 // @ 構造体の型。
@@ -45,9 +48,16 @@ type todoContent struct {
 }
 
 // *TodoとそのTodoが持つ全てのTagを含む新しい構造体
-type TodoWithTags struct {
+type todoWithTags struct {
 	Todo     *model.Todo `json:"todo"`
 	TagNames []string    `json:"tagNames"`
+}
+
+// ! Edit用のリクエスト構造体
+type editTodoRequest struct {
+	Content      string   `json:"content"`      // 新たに設定したいTODOの内容
+	AddTagNames  []string `json:"addTagNames"`  // 追加したいタグの名前のリスト
+	DeleteTagIDs []uint   `json:"deleteTagIDs"` // 削除したいタグのIDのリスト
 }
 
 // @ /mainのルーティングで、この構造体を使用する（呼び出す）ための関数を定義。
@@ -99,7 +109,7 @@ func (h todoHandler) CreateWithTags(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization") // リクエストヘッダーからAuthorizationを取得
 	token := strings.TrimPrefix(authHeader, "Bearer ")    // Bearerを削除
 
-	todoWithTags := &TodoWithTags{} // TodoとそのTodoが持つ全てのTagを含む新しい構造体を作成
+	todoWithTags := &todoWithTags{} // TodoとそのTodoが持つ全てのTagを含む新しい構造体を作成
 	if err := c.Bind(todoWithTags); err != nil {
 		return err
 	}
@@ -166,4 +176,31 @@ func (h todoHandler) Delete(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent) // 204ステータスコードを返す
+}
+
+// ! EditWithTagsメソッドを定義(トランザクションを使用して、Todoとそれに紐付くTagの追加と削除を行う)
+func (h todoHandler) EditWithTags(c echo.Context) error {
+	// リクエストヘッダーからAuthorizationを取得
+	authHeader := c.Request().Header.Get("Authorization")
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	idParam := c.Param("ID") // URLからTODOのidパラメータを取得
+
+	// idParamはstring型なので、これをint型に変換する必要があります。
+	ID, err := strconv.Atoi(idParam) // idパラメータをintに変換
+	if err != nil {                  // 変換エラーがあれば
+		return err // エラーを返す
+	}
+
+	request := &editTodoRequest{}           // Edit用のリクエスト構造体を作成
+	if err := c.Bind(request); err != nil { // フロントから受け取ったJSONをrequestにバインド
+		return err
+	}
+
+	editedTodo, err := h.tu.EditWithTags(uint(ID), token, request.Content, request.AddTagNames, request.DeleteTagIDs)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, editedTodo) // 200ステータスコードとeditedTodoを返す
 }

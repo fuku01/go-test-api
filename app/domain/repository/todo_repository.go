@@ -22,4 +22,7 @@ type TodoRepository interface {
 
 	// *DeleteWithTagsメソッド（トランザクションを使用して、TodoとTagを同時に削除）
 	DeleteWithTags(ID uint, userID uint) error
+
+	// !EditWithTagsメソッド(トランザクションを使用して、Todoとそれに紐付くTagの追加と削除を行う)
+	EditWithTags(ID uint, userID uint, content string, addTagNames []string, deleteTagIDs []uint) (*model.Todo, error)
 }
